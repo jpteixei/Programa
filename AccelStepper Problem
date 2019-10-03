@@ -1,0 +1,223 @@
+//BIBLIOTECAS
+
+
+#include <AccelStepper.h>
+
+
+
+//VARIÁVEIS INICIAIS DOS   MOTORES
+int velocidade_motor = 800;
+int aceleracao_motor = 250;
+
+
+//VARIÁVEIS DECLARAÇÃO DE SENTIDO DOS MOTORES
+int lf = 0;
+int lb = 0;
+int rf = 0;
+int rb = 0;
+
+//VALOR BASE DE CADA MOTOR
+int baself = 0;
+int baselb = 0;
+int baserf = 0;
+int baserb = 0;
+
+// DEFINIÇÃO DE PINOS ENABLE
+int Enable_RF = 38;
+int Enable_LF = 56;
+int Enable_LB = 62;
+int Enable_RB = 24;
+
+// DEFINIÇÃO DE MOTORES (PINOS STEP e DIR)
+AccelStepper motor_LB(1, 54, 55);
+AccelStepper motor_RF(1, 60, 61);
+AccelStepper motor_LF(1, 46, 48);
+AccelStepper motor_RB(1, 26, 28);
+
+void setup() {
+  //INICIO DO SERIAL
+  Serial.begin(9600);
+
+
+  // DECLARANDO PINOS ENABLE COMO OUTPUT
+  pinMode(Enable_RF, OUTPUT);
+  pinMode(Enable_LF, OUTPUT);
+  pinMode(Enable_LB, OUTPUT);
+  pinMode(Enable_RB, OUTPUT);
+
+  // CONFIGURAÇÕES INICIAIS motor_RF
+  motor_RF.setMaxSpeed(velocidade_motor);
+  motor_RF.setSpeed(velocidade_motor);
+  motor_RF.setAcceleration(aceleracao_motor);
+
+  // CONFIGURAÇÕES INICIAIS motor_LF
+  motor_LF.setMaxSpeed(velocidade_motor);
+  motor_LF.setSpeed(velocidade_motor);
+  motor_LF.setAcceleration(aceleracao_motor);
+
+  // CONFIGURAÇÕES INICIAIS motor_LB
+  motor_LB.setMaxSpeed(velocidade_motor);
+  motor_LB.setSpeed(velocidade_motor);
+  motor_LB.setAcceleration(aceleracao_motor);
+
+  // CONFIGURAÇÕES INICIAIS motor_RB
+  motor_RB.setMaxSpeed(velocidade_motor);
+  motor_RB.setSpeed(velocidade_motor);
+  motor_RB.setAcceleration(aceleracao_motor);
+
+
+}
+
+
+
+
+// FUNÇÃO SENTIDO FRENTE  
+void Set_Sentido(char sentido) {
+  if (sentido == 'F') {
+ 
+    lf = -1;
+    lb = -1;
+    rf = 1;
+    rb = 1;
+ 
+  }
+
+  //  sentido trás
+
+  if (sentido == 'T') {
+    lf = 1;
+    lb = 1;
+    rf = -1;
+    rb = -1;
+  }
+
+  //  sentido direita
+  if (sentido == 'D') {
+    lf = -1;
+    lb = 1;
+    rf = -1;
+    rb = 1;
+  }
+
+  //  sentido esquerda
+  if (sentido == 'E') {
+    lf = 1;
+    lb = -1;
+    rf = 1;
+    rb = -1;
+  }
+}
+
+
+//FUNÇÃO DISTÂNCIA
+void Set_Distancia(int d) {
+
+  //habilita drivers
+ 
+  digitalWrite(Enable_RF, LOW);
+  digitalWrite(Enable_LF, LOW);
+  digitalWrite(Enable_LB, LOW);
+  digitalWrite(Enable_RB, LOW);
+
+  //moveto
+  motor_RF.moveTo((d * rf) + baserf);
+  motor_LF.moveTo((d * lf) + baself);
+  motor_LB.moveTo((d * lb) + baselb);
+  motor_RB.moveTo((d * rb) + baserb);
+
+  //desabilita drivers
+
+}
+
+
+//FUNÇÃO RUN
+void Run_All() {
+  while((motor_RF.distanceToGo()!=0) && (motor_LF.distanceToGo() !=0) &&(motor_LB.distanceToGo() !=0) && (motor_RB.distanceToGo() !=0))
+      {
+  motor_RF.run();
+  motor_LF.run();
+  motor_LB.run();
+  motor_RB.run();
+      }
+set_base_atual();
+
+}
+
+//FUNÇÕES ANDAR
+
+//frente
+void Andar_Frente(int distancia) {
+  Set_Sentido('F');
+  Set_Distancia(distancia);
+
+}
+
+//trás
+void Andar_Tras(int distancia) {
+  Set_Sentido('T');
+  Set_Distancia(distancia);
+
+}
+
+//direita
+void Andar_Direita(int distancia) {
+  Set_Sentido('D');
+  Set_Distancia(distancia);
+
+}
+
+// esquerda
+void Andar_Esquerda(int distancia) {
+  Set_Sentido('E');
+  Set_Distancia(distancia);
+
+}
+//FUNÇÃO VALOR BASE
+
+void set_base_atual() {
+  if (motor_RF.distanceToGo() == 0 && motor_LF.distanceToGo() == 0 && motor_LB.distanceToGo() == 0 && motor_RB.distanceToGo() == 0) {
+    baself = motor_RF.currentPosition()+ motor_RF.distanceToGo();
+    baselb = motor_LF.currentPosition() +  motor_LF.distanceToGo();
+    baserf = motor_LB.currentPosition() +  motor_LB.distanceToGo();
+    baserb = motor_RB.currentPosition() + motor_RB.distanceToGo();
+  }
+}
+
+//FUNÇÃO PARA TESTES DE CONTROLE
+void print_status() {
+  Serial.println("currentPosition");
+  Serial.println(motor_RF.currentPosition());
+  Serial.println(motor_LF.currentPosition());
+  Serial.println(motor_LB.currentPosition());
+  Serial.println(motor_RB.currentPosition());
+  Serial.println("distanceToGo");
+  Serial.println(motor_RF.distanceToGo());
+  Serial.println(motor_LF.distanceToGo());
+  Serial.println(motor_LB.distanceToGo());
+  Serial.println(motor_RB.distanceToGo());
+}
+//FUNÇÃO DAS MISSÕES
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+
+//FUNÇÃO MAIN
+void loop() {
+  //MOVIMENTAÇÃO = Andar_Frente(DISTANCIA); && Andar_Tras(DISTANCIA); && Andar_Direita(DISTANCIA); && Andar_Esquerda(DISTANCIA); &&
+  //MOVIMENTAÇÃO = Diagonal_LF_RB_FRENTE(DISTANCIA);  && Diagonal_LF_RB_TRAS(DISTANCIA); && Diagonal_RF_LB_FRENTE(DISTANCIA); && Diagonal_RF_LB_TRAS(DISTANCIA);\
+ 
+  // GIROS = GiroHorario (DISTANCIA);  &&  GiroAntiHorario (DISTANCIA);
+ 
+  // MISSÕES = Garra('A'); || Garra('F'); || Garra('Q'); /// PA(angulo em graus);
+
+  // CONVERTENDO UNIDADES SENSOR_R
+
+Andar_Frente(1200);
+Run_All();
+Andar_Tras(1200);
+Run_All();
+  Andar_Direita(1200);
+Run_All();  
